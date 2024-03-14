@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_editor/common/constants/sizes.dart';
-import 'package:image_editor/features/main/view/main_screen.dart';
+import 'package:image_editor/features/main/views/main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
