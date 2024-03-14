@@ -1,7 +1,10 @@
 // ignore_for_file: deprecated_member_use
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:image_editor/common/utils/app_snackbar.dart';
 import 'package:image_editor/common/utils/back_handler_button.dart';
 import 'package:image_editor/features/main/models/sticker_model.dart';
 import 'package:image_editor/features/main/widgets/emoticon_sticker.dart';
@@ -9,6 +12,8 @@ import 'package:image_editor/features/main/widgets/main_app_bar.dart';
 import 'package:image_editor/features/main/widgets/main_footer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:ui' as ui;
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -29,6 +34,9 @@ class _MainScreenState extends State<MainScreen> {
   /// 스티커 고유 ID 부여
   String? selectedId;
 
+  /// 이미지 고유 Key
+  GlobalKey imgKey = GlobalKey();
+
   /// 뒤로가기 처리
   BackHandlerButton? backHandlerButton;
 
@@ -44,7 +52,30 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   /// 이미지 저장
-  Future<void> _onSaveImage() async {}
+  Future<void> _onSaveImage() async {
+    RenderRepaintBoundary boundary =
+        imgKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+    ui.Image image = await boundary.toImage();
+
+    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+    Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+    await ImageGallerySaver.saveImage(
+      pngBytes,
+      quality: 100,
+    );
+
+    if (mounted) {
+      var snackbar = AppSnackbar(
+        context: context,
+        msg: '이미지가 갤러리에 저장 되었습니다!',
+      );
+
+      snackbar.showSnackbar(context);
+    }
+  }
 
   /// 스티커 삭제
   Future<void> _onDeleteImage() async {
@@ -121,30 +152,33 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _mainScreenBody() {
     if (_image != null) {
-      return Positioned.fill(
-        child: InteractiveViewer(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.file(
-                File(_image!.path),
-                fit: BoxFit.cover,
-              ),
-              ...stickers.map(
-                (data) {
-                  return Center(
-                    child: EmoticonSticker(
-                      key: ObjectKey(data.id),
-                      onTransform: () {
-                        _onTransform(data.id);
-                      },
-                      imgPath: data.imgPath,
-                      selected: selectedId == data.id,
-                    ),
-                  );
-                },
-              ),
-            ],
+      return RepaintBoundary(
+        key: imgKey,
+        child: Positioned.fill(
+          child: InteractiveViewer(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.file(
+                  File(_image!.path),
+                  fit: BoxFit.cover,
+                ),
+                ...stickers.map(
+                  (data) {
+                    return Center(
+                      child: EmoticonSticker(
+                        key: ObjectKey(data.id),
+                        onTransform: () {
+                          _onTransform(data.id);
+                        },
+                        imgPath: data.imgPath,
+                        selected: selectedId == data.id,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       );
