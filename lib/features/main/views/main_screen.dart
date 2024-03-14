@@ -47,7 +47,11 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _onSaveImage() async {}
 
   /// 스티커 삭제
-  Future<void> _onDeleteImage() async {}
+  Future<void> _onDeleteImage() async {
+    setState(() {
+      stickers = stickers.where((data) => data.id != selectedId).toSet();
+    });
+  }
 
   /// Footer Tab
   Future<void> _onEmotionTap(int index) async {
