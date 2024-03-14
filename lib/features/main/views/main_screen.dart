@@ -3,6 +3,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_editor/common/utils/back_handler_button.dart';
+import 'package:image_editor/features/main/models/sticker_model.dart';
+import 'package:image_editor/features/main/widgets/emoticon_sticker.dart';
 import 'package:image_editor/features/main/widgets/main_app_bar.dart';
 import 'package:image_editor/features/main/widgets/main_footer.dart';
 import 'package:image_picker/image_picker.dart';
@@ -19,6 +21,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   /// Image 객체 생성
   XFile? _image;
+
+  /// 스티거 저장 용도 멤버변수
+  Set<StickerModel> stickers = {};
+
+  /// 스티커 고유 ID 부여
+  String? selectedId;
 
   /// 뒤로가기 처리
   BackHandlerButton? backHandlerButton;
@@ -42,6 +50,9 @@ class _MainScreenState extends State<MainScreen> {
 
   /// Footer Tab
   void _onEmotionTap(int id) {}
+
+  /// Emoticon Gesture Call Back
+  void _onTransform() {}
 
   @override
   void initState() {
@@ -81,9 +92,7 @@ class _MainScreenState extends State<MainScreen> {
                 bottom: 0,
                 left: 0,
                 right: 0,
-                child: MainFooter(
-                  onEmotionTap: _onEmotionTap,
-                ),
+                child: MainFooter(onEmotionTap: _onEmotionTap),
               ),
           ],
         ),
@@ -95,9 +104,25 @@ class _MainScreenState extends State<MainScreen> {
     if (_image != null) {
       return Positioned.fill(
         child: InteractiveViewer(
-          child: Image.file(
-            File(_image!.path),
-            fit: BoxFit.cover,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.file(
+                File(_image!.path),
+                fit: BoxFit.cover,
+              ),
+              ...stickers.map(
+                (data) {
+                  return Center(
+                    child: EmoticonSticker(
+                      onTransform: _onTransform,
+                      imgPath: data.imgPath,
+                      selected: selectedId == data.id,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       );
