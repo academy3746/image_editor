@@ -8,6 +8,7 @@ import 'package:image_editor/features/main/widgets/emoticon_sticker.dart';
 import 'package:image_editor/features/main/widgets/main_app_bar.dart';
 import 'package:image_editor/features/main/widgets/main_footer.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:uuid/uuid.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -49,10 +50,24 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _onDeleteImage() async {}
 
   /// Footer Tab
-  void _onEmotionTap(int id) {}
+  Future<void> _onEmotionTap(int index) async {
+    setState(() {
+      stickers = {
+        ...stickers,
+        StickerModel(
+          id: const Uuid().v4(),
+          imgPath: 'assets/images/emoticon_$index.png',
+        ),
+      };
+    });
+  }
 
   /// Emoticon Gesture Call Back
-  void _onTransform() {}
+  void _onTransform(String id) {
+    setState(() {
+      selectedId = id;
+    });
+  }
 
   @override
   void initState() {
@@ -115,7 +130,10 @@ class _MainScreenState extends State<MainScreen> {
                 (data) {
                   return Center(
                     child: EmoticonSticker(
-                      onTransform: _onTransform,
+                      key: ObjectKey(data.id),
+                      onTransform: () {
+                        _onTransform(data.id);
+                      },
                       imgPath: data.imgPath,
                       selected: selectedId == data.id,
                     ),
